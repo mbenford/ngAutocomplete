@@ -1,0 +1,28 @@
+.ngAutocomplete {
+    margin-top: 5px;
+    position: absolute;
+    padding: 8px 0;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    box-shadow: 0 5px 10px rgba(0,0,0,.2);   
+}
+
+.ngAutocomplete ul.suggestions {
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    list-style-type: none;
+}
+
+.ngAutocomplete li.suggestion {
+    padding: 3px 20px;
+    font-size: 18px;
+    line-height: 24px;
+}
+.ngAutocomplete li:hover,
+.ngAutocomplete li.selected {
+    color: #fff;
+    background-color: #0097cf
+}
