@@ -38,21 +38,19 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
             }
         },
         link: function (scope, element, attrs, ngModel) {
-            var keys = { downArrow: 40 }
+            var keys = { downArrow: 40 };
 
             var suggestions = $compile(template)(scope);
             element.after(suggestions);
 
-            scope.$watch(function() { return ngModel.$modelValue; }, function(value) {
-                if (angular.isUndefined(value)) {
-                    return;
-                }
-
-                if (value) {
-                    scope.loadSuggestions(value);
+            ngModel.$parsers.unshift(function(viewValue) {
+                if (viewValue) {
+                    scope.loadSuggestions(viewValue);
                 } else {
                     scope.hideSuggestions();
                 }
+
+                return viewValue;
             });
 
             element.bind('keydown', function(e) {
