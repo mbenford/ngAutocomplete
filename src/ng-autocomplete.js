@@ -39,8 +39,14 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
                 next: function() {
                     $scope.suggestions.select(++$scope.suggestions.index);
                 },
+                prior: function() {
+                    $scope.suggestions.select(--$scope.suggestions.index);
+                },
                 select: function(index) {
-                    if (index >= $scope.suggestions.items.length) {
+                    if (index < 0) {
+                        index = $scope.suggestions.items.length - 1;
+                    }
+                    else if (index >= $scope.suggestions.items.length) {
                         index = 0;
                     }
                     $scope.suggestions.index = index;
@@ -69,6 +75,10 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
                 }
             };
 
+            $scope.priorSuggestion = function() {
+                $scope.suggestions.prior();
+            };
+
             $scope.selectSuggestion = function(index) {
                 $scope.suggestions.select(index);
             };
@@ -78,7 +88,7 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
             };
         },
         link: function (scope, element, attrs, ngModel) {
-            var keys = { downArrow: 40 };
+            var keys = { downArrow: 40, upArrow: 38, escape: 27 };
 
             var suggestions = $compile(template)(scope);
             element.after(suggestions);
@@ -98,6 +108,14 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
 
                 if (e.keyCode === keys.downArrow) {
                     scope.nextSuggestion();
+                    apply = true;
+                }
+                else if (e.keyCode === keys.upArrow) {
+                    scope.priorSuggestion();
+                    apply = true;
+                }
+                else if (e.keyCode === keys.escape) {
+                    scope.hideSuggestions();
                     apply = true;
                 }
 

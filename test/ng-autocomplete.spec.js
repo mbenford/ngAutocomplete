@@ -1,7 +1,7 @@
 (function() {
 'use strict';
 
-describe('auto-complete-directive', function () {
+describe('auto-complete-directive', function() {
     var ENTER = 13, BACKSPACE = 8, ESCAPE = 27, DOWN_ARROW = 40, UP_ARROW = 38;
 
     var $compile,
@@ -89,12 +89,12 @@ describe('auto-complete-directive', function () {
         resolve(items);
     }
 
-    describe('basic features', function () {
-        it('ensures that the suggestions list is hidden by default', function () {
+    describe('basic features', function() {
+        it('ensures that the suggestions list is hidden by default', function() {
             expect(getSuggestionsBox().css('display')).toBe('none');
         });
 
-        it('shows the suggestions list when there are items to show', function () {
+        it('shows the suggestions list when there are items to show', function() {
             // Act
             loadSuggestions('', ['Item1']);
 
@@ -102,7 +102,7 @@ describe('auto-complete-directive', function () {
             expect(getSuggestionsBox().css('display')).toBe('');
         });
 
-        it('doesn\'t show the suggestions list when there is no items to show', function () {
+        it('does not show the suggestions list when there is no items to show', function() {
             // Act
             loadSuggestions('', []);
 
@@ -110,7 +110,7 @@ describe('auto-complete-directive', function () {
             expect(getSuggestionsBox().css('display')).toBe('none');
         });
 
-        it('hides suggestion box when the input box becomes empty', function () {
+        it('hides the suggestion box when the input box becomes empty', function() {
             // Arrange
             element.scope().showSuggestions();
             $scope.$digest();
@@ -122,7 +122,19 @@ describe('auto-complete-directive', function () {
             expect(getSuggestionsBox().css('display')).toBe('none');
         });
 
-        it('calls the load function for every key pressed passing the input content', function () {
+        it('hides the suggestion box when the escape key is pressed', function () {
+            // Arrange
+            element.scope().showSuggestions();
+            $scope.$digest();
+
+            // Act
+            sendKeyDown(ESCAPE);
+
+            // Assert
+            expect(getSuggestionsBox().css('display')).toBe('none');
+        });
+
+        it('calls the load function for every key pressed passing the input content', function() {
             // Act
             sendKeyPress(65);
             sendKeyPress(66);
@@ -135,7 +147,7 @@ describe('auto-complete-directive', function () {
             expect($scope.loadItems.calls[2].args[0]).toBe('ABC');
         });
 
-        it('renders all elements returned by the load function', function () {
+        it('renders all elements returned by the load function', function() {
             // Act
             loadSuggestions('', ['Item1','Item2','Item3']);
 
@@ -146,54 +158,17 @@ describe('auto-complete-directive', function () {
             expect(getSuggestionText(2)).toBe('Item3');
         });
 
-        it('calls the load function passing the current input content when the down arrow key is pressed and the suggestions box is hidden', function () {
+        it('calls the load function passing the current input content when the down arrow key is pressed and the suggestions box is hidden', function() {
             // Act
             sendKeyDown(DOWN_ARROW);
 
             // Assert
             expect($scope.loadItems).toHaveBeenCalledWith('');
         });
-    });
 
-    describe('downward navigation', function () {
-        it('selects the first suggestion when the down arrow key is pressed and there\'s nothing selected', function () {
+        it('highlights the selected suggestion only', function() {
             // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
-
-            // Act
-            sendKeyDown(DOWN_ARROW);
-
-            // Assert
-            expect(element.scope().suggestions.selected).toBe('Item1');
-        });
-
-        it('selects the next suggestion when the down arrow key is pressed and there\'s something selected', function () {
-            // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
-            element.scope().selectSuggestion(0);
-
-            // Act
-            sendKeyDown(DOWN_ARROW);
-
-            // Assert
-            expect(element.scope().suggestions.selected).toBe('Item2');
-        });
-
-        it('selects the first suggestion when the down arrow key is pressed and the last item is selected', function () {
-            // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
-            element.scope().selectSuggestion(1);
-
-            // Act
-            sendKeyDown(DOWN_ARROW);
-
-            // Assert
-            expect(element.scope().suggestions.selected).toBe('Item1');
-        });
-
-        it('highlights the selected suggestion only', function () {
-            // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
+            loadSuggestions('', ['Item1', 'Item2', 'Item3']);
 
             // Act
             element.scope().selectSuggestion(1);
@@ -202,6 +177,92 @@ describe('auto-complete-directive', function () {
             // Assert
             expect(getSuggestion(0).hasClass('selected')).toBe(false);
             expect(getSuggestion(1).hasClass('selected')).toBe(true);
+            expect(getSuggestion(2).hasClass('selected')).toBe(false);
+        });
+
+    });
+
+    describe('navigation through suggestions', function() {
+        beforeEach(function() {
+            element.scope().showSuggestions();
+        });
+
+        describe('downward', function() {
+            beforeEach(function() {
+                element.scope().showSuggestions();
+            });
+
+            it('selects the first suggestion when the down arrow key is pressed and there\'s nothing selected', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2']);
+
+                // Act
+                sendKeyDown(DOWN_ARROW);
+
+                // Assert
+                expect(element.scope().suggestions.selected).toBe('Item1');
+            });
+
+            it('selects the next suggestion when the down arrow key is pressed and there\'s something selected', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2']);
+                element.scope().selectSuggestion(0);
+
+                // Act
+                sendKeyDown(DOWN_ARROW);
+
+                // Assert
+                expect(element.scope().suggestions.selected).toBe('Item2');
+            });
+
+            it('selects the first suggestion when the down arrow key is pressed and the last item is selected', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2']);
+                element.scope().selectSuggestion(1);
+
+                // Act
+                sendKeyDown(DOWN_ARROW);
+
+                // Assert
+                expect(element.scope().suggestions.selected).toBe('Item1');
+            });
+        });
+
+        describe('upward', function() {
+            it('selects the last suggestion when the up arrow key is pressed and there\'s nothing selected', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2']);
+
+                // Act
+                sendKeyDown(UP_ARROW);
+
+                // Assert
+                expect(element.scope().suggestions.selected).toBe('Item2');
+            });
+
+            it('selects the prior suggestion when the down up key is pressed and there\'s something selected', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2']);
+                element.scope().selectSuggestion(1);
+
+                // Act
+                sendKeyDown(UP_ARROW);
+
+                // Assert
+                expect(element.scope().suggestions.selected).toBe('Item1');
+            });
+
+            it('selects the last suggestion when the up arrow key is pressed and the first item is selected', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2']);
+                element.scope().selectSuggestion(0);
+
+                // Act
+                sendKeyDown(UP_ARROW);
+
+                // Assert
+                expect(element.scope().suggestions.selected).toBe('Item2');
+            });
         });
     });
 });
