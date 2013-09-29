@@ -21,6 +21,8 @@ describe('auto-complete-directive', function () {
 
         deferred = $q.defer();
         $scope.loadItems = jasmine.createSpy().andReturn(deferred.promise);
+
+        compile();
     });
 
     function compile() {
@@ -82,36 +84,27 @@ describe('auto-complete-directive', function () {
         $scope.$digest();
     }
 
+    function loadSuggestions(text, items) {
+        element.scope().loadSuggestions(text);
+        resolve(items);
+    }
+
     describe('basic features', function () {
         it('ensures that the suggestions list is hidden by default', function () {
-            // Arrange/Act
-            compile();
-
-            // Assert
             expect(getSuggestionsBox().css('display')).toBe('none');
         });
 
         it('shows the suggestions list when there are items to show', function () {
-            // Arrange
-            compile();
-            resolve(['Item1']);
-
             // Act
-            element.scope().loadSuggestions('');
-            $scope.$digest();
+            loadSuggestions('', ['Item1']);
 
             // Assert
             expect(getSuggestionsBox().css('display')).toBe('');
         });
 
         it('doesn\'t show the suggestions list when there is no items to show', function () {
-            // Arrange
-            compile();
-            resolve([]);
-
             // Act
-            element.scope().loadSuggestions('');
-            $scope.$digest();
+            loadSuggestions('', []);
 
             // Assert
             expect(getSuggestionsBox().css('display')).toBe('none');
@@ -119,7 +112,6 @@ describe('auto-complete-directive', function () {
 
         it('hides suggestion box when the input box becomes empty', function () {
             // Arrange
-            compile();
             element.scope().showSuggestions();
             $scope.$digest();
 
@@ -131,9 +123,6 @@ describe('auto-complete-directive', function () {
         });
 
         it('calls the load function for every key pressed passing the input content', function () {
-            // Arrange
-            compile();
-
             // Act
             sendKeyPress(65);
             sendKeyPress(66);
@@ -147,13 +136,8 @@ describe('auto-complete-directive', function () {
         });
 
         it('renders all elements returned by the load function', function () {
-            // Arrange
-            compile();
-            resolve(['Item1','Item2','Item3']);
-
             // Act
-            element.scope().loadSuggestions('');
-            $scope.$digest();
+            loadSuggestions('', ['Item1','Item2','Item3']);
 
             // Assert
             expect(getSuggestions().length).toBe(3);
@@ -163,9 +147,6 @@ describe('auto-complete-directive', function () {
         });
 
         it('calls the load function passing the current input content when the down arrow key is pressed and the suggestions box is hidden', function () {
-            // Arrange
-            compile();
-
             // Act
             sendKeyDown(DOWN_ARROW);
 
@@ -174,10 +155,53 @@ describe('auto-complete-directive', function () {
         });
     });
 
-    describe('navigation', function () {
-        it('', function () {
+    describe('downward navigation', function () {
+        it('selects the first suggestion when the down arrow key is pressed and there\'s nothing selected', function () {
+            // Arrange
+            loadSuggestions('', ['Item1', 'Item2']);
 
+            // Act
+            sendKeyDown(DOWN_ARROW);
 
+            // Assert
+            expect(element.scope().suggestions.selected).toBe('Item1');
+        });
+
+        it('selects the next suggestion when the down arrow key is pressed and there\'s something selected', function () {
+            // Arrange
+            loadSuggestions('', ['Item1', 'Item2']);
+            element.scope().selectSuggestion(0);
+
+            // Act
+            sendKeyDown(DOWN_ARROW);
+
+            // Assert
+            expect(element.scope().suggestions.selected).toBe('Item2');
+        });
+
+        it('selects the first suggestion when the down arrow key is pressed and the last item is selected', function () {
+            // Arrange
+            loadSuggestions('', ['Item1', 'Item2']);
+            element.scope().selectSuggestion(1);
+
+            // Act
+            sendKeyDown(DOWN_ARROW);
+
+            // Assert
+            expect(element.scope().suggestions.selected).toBe('Item1');
+        });
+
+        it('highlights the selected suggestion only', function () {
+            // Arrange
+            loadSuggestions('', ['Item1', 'Item2']);
+
+            // Act
+            element.scope().selectSuggestion(1);
+            $scope.$digest();
+
+            // Assert
+            expect(getSuggestion(0).hasClass('selected')).toBe(false);
+            expect(getSuggestion(1).hasClass('selected')).toBe(true);
         });
     });
 });
