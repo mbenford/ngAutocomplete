@@ -1,13 +1,13 @@
-angular.module('auto-complete', []).directive('autocomplete', function($parse, $compile) {
-    var template =  '<div ng-show="suggestions.visible">' +
-                    '  <ul>' +
-                    '    <li ng-repeat="item in suggestions.items" ng-class="getCssClass(item)">{{ item }}</li>' +
-                    '  </ul>' +
-                    '</div>';
+angular.module('auto-complete', []).directive('autoComplete', function($parse, $compile) {
+    var template = '<div class="ngAutocomplete" ng-show="suggestions.visible">' +
+                   '  <ul class="suggestions">' +
+                   '    <li class="suggestion" ng-repeat="item in suggestions.items" ng-class="getCssClass(item)">{{ item }}</li>' +
+                   '  </ul>' +
+                   '</div>';
 
     function loadOptions(scope, attrs) {
         scope.options = {
-            loadFn: attrs.autocomplete ? $parse(attrs.autocomplete)(scope) : null
+            loadFn: attrs.autoComplete ? $parse(attrs.autoComplete)(scope) : null
         }
     }
 
@@ -55,6 +55,9 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
             };
 
             $scope.loadSuggestions = function(text) {
+                if ($scope.suggestions.selected === text) {
+                    return;
+                }
                 $scope.suggestions.load(text);
             };
 
@@ -83,14 +86,21 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
                 $scope.suggestions.select(index);
             };
 
+            $scope.addSuggestion = function(ngModel) {
+                ngModel.$setViewValue($scope.suggestions.selected);
+                ngModel.$render();
+
+                $scope.hideSuggestions();
+            };
+
             $scope.getCssClass = function(item) {
                 return $scope.suggestions.selected === item ? 'selected' : '';
             };
         },
         link: function (scope, element, attrs, ngModel) {
-            var keys = { downArrow: 40, upArrow: 38, escape: 27 };
-
             var suggestions = $compile(template)(scope);
+            suggestions.css('width', element[0].offsetWidth + 'px');
+
             element.after(suggestions);
 
             ngModel.$parsers.unshift(function(viewValue) {
@@ -104,6 +114,8 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
             });
 
             element.bind('keydown', function(e) {
+                var keys = { downArrow: 40, upArrow: 38, enter: 13, escape: 27 };
+
                 var apply = false;
 
                 if (e.keyCode === keys.downArrow) {
@@ -118,10 +130,19 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
                     scope.hideSuggestions();
                     apply = true;
                 }
+                else if (e.keyCode === keys.enter) {
+                    scope.addSuggestion(ngModel);
+                    apply = true;
+                }
 
                 if (apply) {
                     scope.$apply();
                 }
+            });
+
+            element.bind('blur', function() {
+                scope.hideSuggestions();
+                scope.$apply();
             })
         }
     };
