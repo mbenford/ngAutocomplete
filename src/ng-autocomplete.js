@@ -21,6 +21,13 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
             $scope.suggestions = {
                 items: [],
                 visible: false,
+
+                show: function() {
+                    $scope.suggestions.visible = true;
+                },
+                hide: function() {
+                    $scope.suggestions.visible = false;
+                },
                 load: function(text) {
                     $scope.options.loadFn(text).then(function(items) {
                         $scope.suggestions.items = items;
@@ -33,8 +40,12 @@ angular.module('auto-complete', []).directive('autocomplete', function($parse, $
                 $scope.suggestions.load(text);
             };
 
+            $scope.showSuggestions = function () {
+                $scope.suggestions.show();
+            };
+
             $scope.hideSuggestions = function() {
-                $scope.suggestions.visible = false;
+                $scope.suggestions.hide();
             }
         },
         link: function (scope, element, attrs, ngModel) {

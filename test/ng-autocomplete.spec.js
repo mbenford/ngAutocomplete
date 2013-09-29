@@ -94,10 +94,11 @@ describe('auto-complete-directive', function () {
         it('shows the suggestions list when there are items to show', function () {
             // Arrange
             compile();
+            resolve(['Item1']);
 
             // Act
-            resolve(['Item1']);
-            sendKeyPress(65);
+            element.scope().loadSuggestions('');
+            $scope.$digest();
 
             // Assert
             expect(getSuggestionsBox().css('display')).toBe('');
@@ -106,10 +107,11 @@ describe('auto-complete-directive', function () {
         it('doesn\'t show the suggestions list when there is no items to show', function () {
             // Arrange
             compile();
+            resolve([]);
 
             // Act
-            resolve([]);
-            sendKeyPress(65);
+            element.scope().loadSuggestions('');
+            $scope.$digest();
 
             // Assert
             expect(getSuggestionsBox().css('display')).toBe('none');
@@ -118,8 +120,8 @@ describe('auto-complete-directive', function () {
         it('hides suggestion box when the input box becomes empty', function () {
             // Arrange
             compile();
-            resolve(['Item1']);
-            sendKeyPress(65);
+            element.scope().showSuggestions();
+            $scope.$digest();
 
             // Act
             sendBackspace();
@@ -147,10 +149,11 @@ describe('auto-complete-directive', function () {
         it('renders all elements returned by the load function', function () {
             // Arrange
             compile();
+            resolve(['Item1','Item2','Item3']);
 
             // Act
-            resolve(['Item1','Item2','Item3']);
-            sendKeyPress(65);
+            element.scope().loadSuggestions('');
+            $scope.$digest();
 
             // Assert
             expect(getSuggestions().length).toBe(3);
