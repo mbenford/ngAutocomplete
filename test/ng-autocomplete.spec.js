@@ -2,7 +2,7 @@
 'use strict';
 
 describe('auto-complete-directive', function() {
-    var ENTER = 13, BACKSPACE = 8, ESCAPE = 27, DOWN_ARROW = 40, UP_ARROW = 38;
+    var ENTER = 13, TAB = 9, BACKSPACE = 8, ESCAPE = 27, DOWN_ARROW = 40, UP_ARROW = 38;
 
     var $compile,
         $scope,
@@ -133,7 +133,7 @@ describe('auto-complete-directive', function() {
             expect(getSuggestionsBox().css('display')).toBe('none');
         });
 
-        it('hides the suggestion box when the escape key is pressed', function () {
+        it('hides the suggestion box when the escape key is pressed', function() {
             // Arrange
             element.scope().showSuggestions();
             $scope.$digest();
@@ -157,7 +157,7 @@ describe('auto-complete-directive', function() {
             expect(getSuggestionsBox().css('display')).toBe('none');
         });
 
-        it('adds the selected suggestion to the input field when the enter key is pressed and the suggestions box is visible', function () {
+        it('adds the selected suggestion to the input field when the enter key is pressed and the suggestions box is visible', function() {
             // Arrange
             loadSuggestions('', ['Item1', 'Item2']);
             element.scope().showSuggestions();
@@ -165,6 +165,19 @@ describe('auto-complete-directive', function() {
 
             // Act
             sendKeyDown(ENTER);
+
+            // Assert
+            expect(element.val()).toBe('Item1');
+        });
+
+        it('adds the selected suggestion to the input field when the tab key is pressed and there is a suggestion selected', function() {
+            // Arrange
+            loadSuggestions('', ['Item1', 'Item2']);
+            element.scope().showSuggestions();
+            element.scope().selectSuggestion(0);
+
+            // Act
+            sendKeyDown(TAB);
 
             // Assert
             expect(element.val()).toBe('Item1');
@@ -196,7 +209,7 @@ describe('auto-complete-directive', function() {
             expect($scope.loadItems.calls[2].args[0]).toBe('ABC');
         });
 
-        it('does not call the load function after adding the selected suggestion to the input field', function () {
+        it('does not call the load function after adding the selected suggestion to the input field', function() {
             // Arrange
             loadSuggestions('', ['Item1', 'Item2']);
             element.scope().showSuggestions();
@@ -231,7 +244,7 @@ describe('auto-complete-directive', function() {
             expect(getSuggestion(2).hasClass('selected')).toBe(false);
         });
 
-        it('sets the suggestion box width as the input field width', function () {
+        it('sets the suggestion box width as the input field width', function() {
             // Arrange
             var template = angular.element('<input type="text" ng-model="value" auto-complete="loadItems">');
             $(document.body).append(template);
@@ -326,6 +339,43 @@ describe('auto-complete-directive', function() {
 
                 // Assert
                 expect(element.scope().suggestions.selected).toBe('Item2');
+            });
+        });
+
+        describe('mouse', function() {
+            it('selects the suggestion under the mouse pointer', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2', 'Item3']);
+
+                // Act
+                getSuggestion(1).mouseenter();
+
+                // Assert
+                expect(element.scope().suggestions.selected).toBe('Item2');
+            });
+
+            it('adds the selected suggestion to the input field when a mouse click is triggered', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2', 'Item3']);
+                getSuggestion(1).mouseenter();
+
+                // Act
+                getSuggestion(1).click();
+
+                // Assert
+                expect(element.val()).toBe('Item2');
+            });
+
+            it('focuses the input field when a suggestion is added via a mouse click', function() {
+                // Arrange
+                loadSuggestions('', ['Item1', 'Item2', 'Item3']);
+                spyOn(element[0], 'focus');
+
+                // Act
+                getSuggestion(1).click();
+
+                // Assert
+                expect(element[0].focus).toHaveBeenCalled();
             });
         });
     });

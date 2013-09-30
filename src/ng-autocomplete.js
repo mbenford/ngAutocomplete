@@ -1,58 +1,67 @@
 angular.module('auto-complete', []).directive('autoComplete', function($parse, $compile) {
-    var template = '<div class="ngAutocomplete" ng-show="suggestions.visible">' +
-                   '  <ul class="suggestions">' +
-                   '    <li class="suggestion" ng-repeat="item in suggestions.items" ng-class="getCssClass(item)">{{ item }}</li>' +
-                   '  </ul>' +
-                   '</div>';
+    var template =
+        '<div class="ngAutocomplete" ng-show="suggestions.visible">' +
+        '  <ul class="suggestions">' +
+        '    <li class="suggestion" ng-repeat="item in suggestions.items"' +
+        '                           ng-class="getCssClass(item)"' +
+        '                           ng-click="addSuggestion()"' +
+        '                           ng-mouseenter="selectSuggestion($index)">{{ item }}</li>' +
+        '  </ul>' +
+        '</div>';
 
     function loadOptions(scope, attrs) {
         scope.options = {
             loadFn: attrs.autoComplete ? $parse(attrs.autoComplete)(scope) : null
-        }
+        };
+    }
+
+    function Suggestions(loadFn) {
+        var self = this;
+
+        self.loadFn = loadFn;
+        self.items = [];
+        self.visible = false;
+        self.index = -1;
+        self.selected = null;
+
+        self.show = function() {
+            self.visible = true;
+        };
+        self.hide = function() {
+            self.visible = false;
+        };
+        self.load = function(text) {
+            loadFn(text).then(function(items) {
+                self.items = items;
+                self.visible = items.length > 0;
+            });
+        };
+        self.next = function() {
+            self.select(++self.index);
+        };
+        self.prior = function() {
+            self.select(--self.index);
+        };
+        self.select = function(index) {
+            if (index < 0) {
+                index = self.items.length - 1;
+            }
+            else if (index >= self.items.length) {
+                index = 0;
+            }
+            self.index = index;
+            self.selected = self.items[index];
+        };
     }
 
     return {
         restrict: 'A',
         require: '?ngModel',
         scope: true,
-        controller: function($scope, $attrs) {
+        controller: function($scope, $attrs, $element) {
             loadOptions($scope, $attrs);
 
-            $scope.suggestions = {
-                items: [],
-                visible: false,
-                index: -1,
-                selected: null,
-
-                show: function() {
-                    $scope.suggestions.visible = true;
-                },
-                hide: function() {
-                    $scope.suggestions.visible = false;
-                },
-                load: function(text) {
-                    $scope.options.loadFn(text).then(function(items) {
-                        $scope.suggestions.items = items;
-                        $scope.suggestions.visible = items.length > 0;
-                    });
-                },
-                next: function() {
-                    $scope.suggestions.select(++$scope.suggestions.index);
-                },
-                prior: function() {
-                    $scope.suggestions.select(--$scope.suggestions.index);
-                },
-                select: function(index) {
-                    if (index < 0) {
-                        index = $scope.suggestions.items.length - 1;
-                    }
-                    else if (index >= $scope.suggestions.items.length) {
-                        index = 0;
-                    }
-                    $scope.suggestions.index = index;
-                    $scope.suggestions.selected = $scope.suggestions.items[$scope.suggestions.index];
-                }
-            };
+            $scope.suggestions = new Suggestions($scope.options.loadFn);
 
             $scope.loadSuggestions = function(text) {
                 if ($scope.suggestions.selected === text) {
@@ -86,11 +95,13 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
                 $scope.suggestions.select(index);
             };
 
-            $scope.addSuggestion = function(ngModel) {
-                ngModel.$setViewValue($scope.suggestions.selected);
-                ngModel.$render();
+            $scope.addSuggestion = function() {
+                $scope.ngModel.$setViewValue($scope.suggestions.selected);
+                $scope.ngModel.$render();
 
                 $scope.hideSuggestions();
+
+                $element[0].focus();
             };
 
             $scope.getCssClass = function(item) {
@@ -98,10 +109,7 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             };
         },
         link: function (scope, element, attrs, ngModel) {
-            var suggestions = $compile(template)(scope);
-            suggestions.css('width', element[0].offsetWidth + 'px');
-
-            element.after(suggestions);
+            scope.ngModel = ngModel;
 
             ngModel.$parsers.unshift(function(viewValue) {
                 if (viewValue) {
@@ -114,36 +122,45 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             });
 
             element.bind('keydown', function(e) {
-                var keys = { downArrow: 40, upArrow: 38, enter: 13, escape: 27 };
+                var keys = {
+                    downArrow: 40, upArrow: 38, enter: 13, escape: 27, tab: 9,
+                    isHotkey: function(key) {
+                        for (var k in keys) {
+                            if (keys.hasOwnProperty(k) && keys[k] === key)
+                                return true;
+                        }
+                        return false;
+                    }
+                };
 
-                var apply = false;
+                if (!keys.isHotkey(e.keyCode)) {
+                    return;
+                }
 
                 if (e.keyCode === keys.downArrow) {
                     scope.nextSuggestion();
-                    apply = true;
                 }
                 else if (e.keyCode === keys.upArrow) {
                     scope.priorSuggestion();
-                    apply = true;
                 }
                 else if (e.keyCode === keys.escape) {
                     scope.hideSuggestions();
-                    apply = true;
                 }
-                else if (e.keyCode === keys.enter) {
-                    scope.addSuggestion(ngModel);
-                    apply = true;
+                else if (e.keyCode === keys.enter || e.keyCode === keys.tab) {
+                    scope.addSuggestion();
                 }
 
-                if (apply) {
-                    scope.$apply();
-                }
+                scope.$apply();
             });
 
             element.bind('blur', function() {
                 scope.hideSuggestions();
                 scope.$apply();
-            })
+            });
+
+            var suggestions = $compile(template)(scope);
+            suggestions.css('width', element[0].offsetWidth + 'px');
+            element.after(suggestions);
         }
     };
 });
