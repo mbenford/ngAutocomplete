@@ -136,7 +136,9 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             element.bind('keydown', function(e) {
                 var key = hotkeys[e.keyCode];
 
-                if (!key) return;
+                if (!key) {
+                    return;
+                }
 
                 if (key.name === 'down') {
                     scope.nextSuggestion();
