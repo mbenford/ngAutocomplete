@@ -19,11 +19,13 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
         var self = this;
 
         self.loadFn = loadFn;
-        self.items = [];
-        self.visible = false;
-        self.index = -1;
-        self.selected = null;
 
+        self.reset = function() {
+            self.items = [];
+            self.visible = false;
+            self.index = -1;
+            self.selected = null;
+        };
         self.show = function() {
             self.visible = true;
         };
@@ -52,6 +54,8 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             self.index = index;
             self.selected = self.items[index];
         };
+
+        self.reset();
     }
 
     return {
@@ -75,7 +79,7 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             };
 
             $scope.hideSuggestions = function() {
-                $scope.suggestions.hide();
+                $scope.suggestions.reset();
             };
 
             $scope.nextSuggestion = function() {

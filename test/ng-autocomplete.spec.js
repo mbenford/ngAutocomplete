@@ -183,6 +183,18 @@ describe('auto-complete-directive', function() {
             expect(element.val()).toBe('Item1');
         });
 
+        it('sets the selected suggestion to null after adding it to the input field', function () {
+            // Arrange
+            loadSuggestions('', ['Item1', 'Item2']);
+            element.scope().selectSuggestion(0);
+
+            // Act
+            element.scope().addSuggestion();
+
+            // Assert
+            expect(element.scope().suggestions.selected).toBeNull();
+        });
+
         it('hides the suggestion box after adding the selected suggestion to the input field', function() {
             // Arrange
             loadSuggestions('', ['Item1', 'Item2']);
