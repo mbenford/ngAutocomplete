@@ -379,6 +379,59 @@ describe('auto-complete-directive', function() {
             });
         });
     });
+
+    describe('hotkeys propagation handling - suggestion box is visible', function () {
+        beforeEach(function () {
+            element.scope().showSuggestions();
+        });
+
+        it('prevents the down arrow keydown event from being propagated', function () {
+            expect(sendKeyDown(DOWN_ARROW).isDefaultPrevented()).toBe(true);
+        });
+
+        it('prevents the up arrow keydown event from being propagated', function () {
+            expect(sendKeyDown(UP_ARROW).isDefaultPrevented()).toBe(true);
+        });
+
+        it('prevents the enter keydown event from being propagated', function () {
+            expect(sendKeyDown(ENTER).isDefaultPrevented()).toBe(true);
+        });
+
+        it('prevents the tab keydown event from being propagated', function () {
+            expect(sendKeyDown(TAB).isDefaultPrevented()).toBe(true);
+        });
+
+        it('prevents the escape keydown event from being propagated', function () {
+            expect(sendKeyDown(ESCAPE).isDefaultPrevented()).toBe(true);
+        });
+    });
+
+    describe('hotkeys propagation handling - suggestion box is hidden', function () {
+        beforeEach(function () {
+            element.scope().hideSuggestions();
+        });
+
+        it('prevents the down arrow keydown event from being propagated', function () {
+            expect(sendKeyDown(DOWN_ARROW).isDefaultPrevented()).toBe(true);
+        });
+
+        it('does not prevent the up arrow keydown event from being propagated', function () {
+            expect(sendKeyDown(UP_ARROW).isDefaultPrevented()).toBe(false);
+        });
+
+        it('does not prevent the enter keydown event from being propagated', function () {
+            expect(sendKeyDown(ENTER).isDefaultPrevented()).toBe(false);
+        });
+
+        it('does not prevent the tab keydown event from being propagated', function () {
+            expect(sendKeyDown(TAB).isDefaultPrevented()).toBe(false);
+        });
+
+        it('does not prevent the escape keydown event from being propagated', function () {
+            expect(sendKeyDown(ESCAPE).isDefaultPrevented()).toBe(false);
+        });
+    });
+
 });
 
 }());

@@ -109,6 +109,14 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             };
         },
         link: function (scope, element, attrs, ngModel) {
+            var hotkeys = {
+                9: { name: 'tab' },
+                13: { name: 'enter' },
+                27: { name: 'escape' },
+                38: { name: 'up' },
+                40: { name: 'down' }
+            };
+
             scope.ngModel = ngModel;
 
             ngModel.$parsers.unshift(function(viewValue) {
@@ -122,35 +130,28 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             });
 
             element.bind('keydown', function(e) {
-                var keys = {
-                    downArrow: 40, upArrow: 38, enter: 13, escape: 27, tab: 9,
-                    isHotkey: function(key) {
-                        for (var k in keys) {
-                            if (keys.hasOwnProperty(k) && keys[k] === key)
-                                return true;
-                        }
-                        return false;
-                    }
-                };
+                var key = hotkeys[e.keyCode];
 
-                if (!keys.isHotkey(e.keyCode)) {
-                    return;
-                }
+                if (!key) return;
 
-                if (e.keyCode === keys.downArrow) {
+                if (key.name === 'down') {
                     scope.nextSuggestion();
+                    e.preventDefault();
+                    scope.$apply();
                 }
-                else if (e.keyCode === keys.upArrow) {
-                    scope.priorSuggestion();
+                else if (scope.suggestions.visible) {
+                    if (key.name === 'up') {
+                        scope.priorSuggestion();
+                    }
+                    else if (key.name === 'escape') {
+                        scope.hideSuggestions();
+                    }
+                    else if (key.name === 'enter' || key.name === 'tab') {
+                        scope.addSuggestion();
+                    }
+                    e.preventDefault();
+                    scope.$apply();
                 }
-                else if (e.keyCode === keys.escape) {
-                    scope.hideSuggestions();
-                }
-                else if (e.keyCode === keys.enter || e.keyCode === keys.tab) {
-                    scope.addSuggestion();
-                }
-
-                scope.$apply();
             });
 
             element.bind('blur', function() {
