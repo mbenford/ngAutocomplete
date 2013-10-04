@@ -11,28 +11,7 @@ module.exports = function(grunt) {
         jshint: {
             files: ['Gruntfile.js', '<%= files.js %>', '<%= files.spec %>'],
             options: {
-                curly: true,
-                eqeqeq: true,
-                immed: true,
-                noempty: true,
-                noarg: true,
-                quotmark: 'single',
-                undef: true,
-                eqnull: true,
-                globals: {
-                    angular: true,
-                    module: true,
-                    inject: true,
-                    jQuery: true,
-                    beforeEach: true,
-                    describe: true,
-                    it: true,
-                    expect: true,
-                    spyOn: true,
-                    jasmine: true,
-                    $: true,
-                    document: true
-                }
+                jshintrc: '.jshintrc'
             }
         },
         karma: {
@@ -48,10 +27,17 @@ module.exports = function(grunt) {
             build: ['build/'],
             tmp: ['tmp/']
         },
+        ngmin: {
+            directives: {
+                files: {
+                    'tmp/<%= files.js %>.tmp': ['<%= files.js %>']
+                }
+            }
+        },
         uglify: {
             build: {
                 files: {
-                    'tmp/<%= pkg.name %>.min.js': ['<%= files.js %>']
+                    'tmp/<%= pkg.name %>.min.js': ['tmp/<%= files.js %>.tmp']
                 }
             }
         },
@@ -71,7 +57,7 @@ module.exports = function(grunt) {
                     archive: 'build/<%= pkg.name %>.min.zip'
                 },
                 files : [
-                    { expand: true, src : '**/*', cwd : 'tmp/' }
+                    { expand: true, src : ['**/*.js', '**/*.css'], cwd : 'tmp/' }
                 ]
             },
             unminified: {
@@ -95,9 +81,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-ngmin');
     grunt.loadNpmTasks('grunt-karma');
 
     grunt.registerTask('test', ['jshint', 'karma']);
-    grunt.registerTask('default', ['jshint', 'karma', 'clean', 'uglify', 'cssmin', 'compress', 'clean:tmp']);
+    grunt.registerTask('default', ['jshint', 'karma', 'clean', 'ngmin', 'uglify', 'cssmin', 'compress', 'clean:tmp']);
 };
 

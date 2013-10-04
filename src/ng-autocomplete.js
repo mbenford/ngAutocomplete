@@ -114,7 +114,7 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
         },
         link: function (scope, element, attrs, ngModel) {
             var hotkeys = {
-                9: { name: 'tab' },
+                09: { name: 'tab' },
                 13: { name: 'enter' },
                 27: { name: 'escape' },
                 38: { name: 'up' },
@@ -166,7 +166,7 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             });
 
             var suggestions = $compile(template)(scope);
-            suggestions.css('width', element[0].offsetWidth + 'px');
+            suggestions.css('width', element.prop('offsetWidth') + 'px');
             element.after(suggestions);
         }
     };

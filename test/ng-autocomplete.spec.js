@@ -256,7 +256,7 @@ describe('auto-complete-directive', function() {
             expect(getSuggestion(2).hasClass('selected')).toBe(false);
         });
 
-        it('sets the suggestion box width as the input field width', function() {
+        it('sets the suggestion box width as the input field width when the suggestions box is shown', function() {
             // Arrange
             var template = angular.element('<input type="text" ng-model="value" auto-complete="loadItems">');
             $(document.body).append(template);
