@@ -7,16 +7,18 @@ describe('auto-complete-directive', function() {
     var $compile,
         $scope,
         $q,
+        $timeout,
         element,
         deferred;
 
     beforeEach(function() {
         module('auto-complete');
 
-        inject(function(_$compile_, _$rootScope_, _$q_) {
+        inject(function(_$compile_, _$rootScope_, _$q_, _$timeout_) {
             $scope = _$rootScope_;
             $compile = _$compile_;
             $q = _$q_;
+            $timeout = _$timeout_;
         });
 
         deferred = $q.defer();
@@ -256,18 +258,39 @@ describe('auto-complete-directive', function() {
             expect(getSuggestion(2).hasClass('selected')).toBe(false);
         });
 
-        it('sets the suggestion box width as the input field width when the suggestions box is shown', function() {
-            // Arrange
-            var template = angular.element('<input type="text" ng-model="value" auto-complete="loadItems">');
-            $(document.body).append(template);
-            compile(template);
-            element.scope().showSuggestions();
+        describe('suggestion box size and position', function() {
+            beforeEach(function () {
+                var container = angular.element('<div style="text-align: center;"></div>');
+                $(document.body).append(container);
+                var template = angular.element('<input type="text" ng-model="value" auto-complete="loadItems">');
+                container.append(template);
+                compile(template);
+            });
 
-            // Act
-            $scope.$digest();
+            it('sets the suggestion box width as the input field width when the suggestions box is shown', function() {
+                // Arrange
+                // Done in beforeEach
 
-            // Assert
-            expect(element.next().outerWidth()).toBe(element.outerWidth());
+                // Act
+                element.scope().showSuggestions();
+                $timeout.flush();
+
+                // Assert
+                expect(element.next().css('width')).toBe(element.outerWidth() + 'px');
+            });
+
+            it('sets the suggestion box left position relative to the input field\'s', function () {
+                // Arrange
+                // Done in beforeEach
+
+                // Act
+                element.scope().showSuggestions();
+                $scope.$digest();
+                $timeout.flush();
+
+                // Assert
+                expect(element.next().css('left')).toBe(Math.round(element.offset().left) + 'px');
+            });
         });
     });
 

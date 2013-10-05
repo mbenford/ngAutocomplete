@@ -1,24 +1,33 @@
-angular.module('auto-complete', []).directive('autoComplete', function($parse, $compile) {
+angular.module('auto-complete', []).directive('autoComplete', function($parse, $compile, $timeout) {
+    var hotkeys = {
+         9: { name: 'tab' },
+        13: { name: 'enter' },
+        27: { name: 'escape' },
+        38: { name: 'up' },
+        40: { name: 'down' }
+    };
+
     var template =
-        '<div class="ngAutocomplete" ng-show="suggestions.visible">' +
+        '<div class="ngAutocomplete" ng-style="suggestions.style" ng-show="suggestions.visible">' +
         '  <ul class="suggestions">' +
         '    <li class="suggestion" ng-repeat="item in suggestions.items"' +
-        '                           ng-class="getCssClass(item)"' +
+        '                           ng-class="{selected: item == suggestions.selected}"' +
         '                           ng-click="addSuggestion()"' +
         '                           ng-mouseenter="selectSuggestion($index)">{{ item }}</li>' +
         '  </ul>' +
         '</div>';
 
-    function loadOptions(scope, attrs) {
-        scope.options = {
-            loadFn: attrs.autoComplete ? $parse(attrs.autoComplete)(scope) : null
-        };
-    }
-
-    function Suggestions(loadFn) {
+    function Suggestions(loadFn, element) {
         var self = this;
 
-        self.loadFn = loadFn;
+        var updateStyle = function() {
+            $timeout(function() {
+                self.style = {
+                    width: element.prop('offsetWidth') + 'px',
+                    left: element.prop('offsetLeft') + 'px'
+                };
+            });
+        };
 
         self.reset = function() {
             self.items = [];
@@ -27,6 +36,7 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             self.selected = null;
         };
         self.show = function() {
+            updateStyle();
             self.visible = true;
         };
         self.hide = function() {
@@ -35,7 +45,9 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
         self.load = function(text) {
             loadFn(text).then(function(items) {
                 self.items = items;
-                self.visible = items.length > 0;
+                if (items.length > 0) {
+                    self.show();
+                }
             });
         };
         self.next = function() {
@@ -58,71 +70,63 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
         self.reset();
     }
 
+    function loadOptions(scope, attrs) {
+        scope.options = {
+            loadFn: attrs.autoComplete ? $parse(attrs.autoComplete)(scope) : null
+        };
+    }
+
     return {
         restrict: 'A',
         require: '?ngModel',
         scope: true,
-        controller: function($scope, $attrs, $element) {
-            loadOptions($scope, $attrs);
+        link: function (scope, element, attrs, ngModel) {
+            loadOptions(scope, attrs);
 
-            $scope.suggestions = new Suggestions($scope.options.loadFn);
+            // Scope handling
+            scope.suggestions = new Suggestions(scope.options.loadFn, element);
 
-            $scope.loadSuggestions = function(text) {
-                if ($scope.suggestions.selected === text) {
+            scope.loadSuggestions = function(text) {
+                if (scope.suggestions.selected === text) {
                     return;
                 }
-                $scope.suggestions.load(text);
+                scope.suggestions.load(text);
             };
 
-            $scope.showSuggestions = function () {
-                $scope.suggestions.show();
+            scope.showSuggestions = function () {
+                scope.suggestions.show();
             };
 
-            $scope.hideSuggestions = function() {
-                $scope.suggestions.reset();
+            scope.hideSuggestions = function() {
+                scope.suggestions.reset();
             };
 
-            $scope.nextSuggestion = function() {
-                if ($scope.suggestions.visible) {
-                    $scope.suggestions.next();
+            scope.nextSuggestion = function() {
+                if (scope.suggestions.visible) {
+                    scope.suggestions.next();
                 }
                 else {
-                    $scope.loadSuggestions('');
+                    scope.loadSuggestions('');
                 }
             };
 
-            $scope.priorSuggestion = function() {
-                $scope.suggestions.prior();
+            scope.priorSuggestion = function() {
+                scope.suggestions.prior();
             };
 
-            $scope.selectSuggestion = function(index) {
-                $scope.suggestions.select(index);
+            scope.selectSuggestion = function(index) {
+                scope.suggestions.select(index);
             };
 
-            $scope.addSuggestion = function() {
-                $scope.ngModel.$setViewValue($scope.suggestions.selected);
-                $scope.ngModel.$render();
+            scope.addSuggestion = function() {
+                ngModel.$setViewValue(scope.suggestions.selected);
+                ngModel.$render();
 
-                $scope.hideSuggestions();
+                scope.hideSuggestions();
 
-                $element[0].focus();
+                element[0].focus();
             };
-
-            $scope.getCssClass = function(item) {
-                return $scope.suggestions.selected === item ? 'selected' : '';
-            };
-        },
-        link: function (scope, element, attrs, ngModel) {
-            var hotkeys = {
-                09: { name: 'tab' },
-                13: { name: 'enter' },
-                27: { name: 'escape' },
-                38: { name: 'up' },
-                40: { name: 'down' }
-            };
-
-            scope.ngModel = ngModel;
-
+            
             ngModel.$parsers.unshift(function(viewValue) {
                 if (viewValue) {
                     scope.loadSuggestions(viewValue);
@@ -133,40 +137,40 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
                 return viewValue;
             });
 
-            element.bind('keydown', function(e) {
-                var key = hotkeys[e.keyCode];
+            // DOM events
+            element
+                .bind('keydown', function(e) {
+                    var key = hotkeys[e.keyCode];
 
-                if (!key) {
-                    return;
-                }
+                    if (!key) {
+                        return;
+                    }
 
-                if (key.name === 'down') {
-                    scope.nextSuggestion();
-                    e.preventDefault();
+                    if (key.name === 'down') {
+                        scope.nextSuggestion();
+                        e.preventDefault();
+                        scope.$apply();
+                    }
+                    else if (scope.suggestions.visible) {
+                        if (key.name === 'up') {
+                            scope.priorSuggestion();
+                        }
+                        else if (key.name === 'escape') {
+                            scope.hideSuggestions();
+                        }
+                        else if (key.name === 'enter' || key.name === 'tab') {
+                            scope.addSuggestion();
+                        }
+                        e.preventDefault();
+                        scope.$apply();
+                    }
+                })
+                .bind('blur', function() {
+                    scope.hideSuggestions();
                     scope.$apply();
-                }
-                else if (scope.suggestions.visible) {
-                    if (key.name === 'up') {
-                        scope.priorSuggestion();
-                    }
-                    else if (key.name === 'escape') {
-                        scope.hideSuggestions();
-                    }
-                    else if (key.name === 'enter' || key.name === 'tab') {
-                        scope.addSuggestion();
-                    }
-                    e.preventDefault();
-                    scope.$apply();
-                }
-            });
-
-            element.bind('blur', function() {
-                scope.hideSuggestions();
-                scope.$apply();
-            });
+                });
 
             var suggestions = $compile(template)(scope);
-            suggestions.css('width', element.prop('offsetWidth') + 'px');
             element.after(suggestions);
         }
     };
