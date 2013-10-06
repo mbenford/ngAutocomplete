@@ -4,12 +4,8 @@
 describe('auto-complete-directive', function() {
     var ENTER = 13, TAB = 9, BACKSPACE = 8, ESCAPE = 27, DOWN_ARROW = 40, UP_ARROW = 38;
 
-    var $compile,
-        $scope,
-        $q,
-        $timeout,
-        element,
-        deferred;
+    var $compile, $scope, $q, $timeout,
+        element, deferred;
 
     beforeEach(function() {
         module('auto-complete');
@@ -147,13 +143,13 @@ describe('auto-complete-directive', function() {
             expect(getSuggestionsBox().css('display')).toBe('none');
         });
 
-        it('hides the suggestion box when the input field loses focus', function() {
+        it('hides the suggestion box when the user clicks elsewhere on the page', function() {
             // Arrange
             element.scope().showSuggestions();
             $scope.$digest();
 
             // Act
-            element.trigger('blur');
+            $(document).trigger('click');
 
             // Assert
             expect(getSuggestionsBox().css('display')).toBe('none');

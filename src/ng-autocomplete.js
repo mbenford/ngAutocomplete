@@ -1,12 +1,4 @@
-angular.module('auto-complete', []).directive('autoComplete', function($parse, $compile, $timeout) {
-    var hotkeys = {
-         9: { name: 'tab' },
-        13: { name: 'enter' },
-        27: { name: 'escape' },
-        38: { name: 'up' },
-        40: { name: 'down' }
-    };
-
+angular.module('auto-complete', []).directive('autoComplete', function($parse, $compile, $timeout, $document) {
     var template =
         '<div class="ngAutocomplete" ng-style="suggestions.style" ng-show="suggestions.visible">' +
         '  <ul class="suggestions">' +
@@ -16,6 +8,14 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
         '                           ng-mouseenter="selectSuggestion($index)">{{ item }}</li>' +
         '  </ul>' +
         '</div>';
+
+    var hotkeys = {
+         9: { name: 'tab' },
+        13: { name: 'enter' },
+        27: { name: 'escape' },
+        38: { name: 'up' },
+        40: { name: 'down' }
+    };
 
     function Suggestions(loadFn, element) {
         var self = this;
@@ -138,37 +138,39 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             });
 
             // DOM events
-            element
-                .bind('keydown', function(e) {
-                    var key = hotkeys[e.keyCode];
+            element.bind('keydown', function(e) {
+                var key = hotkeys[e.keyCode];
 
-                    if (!key) {
-                        return;
-                    }
+                if (!key) {
+                    return;
+                }
 
-                    if (key.name === 'down') {
-                        scope.nextSuggestion();
-                        e.preventDefault();
-                        scope.$apply();
+                if (key.name === 'down') {
+                    scope.nextSuggestion();
+                    e.preventDefault();
+                    scope.$apply();
+                }
+                else if (scope.suggestions.visible) {
+                    if (key.name === 'up') {
+                        scope.priorSuggestion();
                     }
-                    else if (scope.suggestions.visible) {
-                        if (key.name === 'up') {
-                            scope.priorSuggestion();
-                        }
-                        else if (key.name === 'escape') {
-                            scope.hideSuggestions();
-                        }
-                        else if (key.name === 'enter' || key.name === 'tab') {
-                            scope.addSuggestion();
-                        }
-                        e.preventDefault();
-                        scope.$apply();
+                    else if (key.name === 'escape') {
+                        scope.hideSuggestions();
                     }
-                })
-                .bind('blur', function() {
+                    else if (key.name === 'enter' || key.name === 'tab') {
+                        scope.addSuggestion();
+                    }
+                    e.preventDefault();
+                    scope.$apply();
+                }
+            });
+
+            $document.bind('click', function(e) {
+                if (scope.suggestions.visible) {
                     scope.hideSuggestions();
                     scope.$apply();
-                });
+                }
+            });
 
             var suggestions = $compile(template)(scope);
             element.after(suggestions);
