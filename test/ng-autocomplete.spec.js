@@ -82,8 +82,8 @@ describe('auto-complete-directive', function() {
         $scope.$digest();
     }
 
-    function loadSuggestions(text, items) {
-        element.scope().loadSuggestions(text);
+    function loadSuggestions(items) {
+        element.scope().loadSuggestions('');
         resolve(items);
     }
 
@@ -94,7 +94,7 @@ describe('auto-complete-directive', function() {
 
         it('renders all elements returned by the load function', function() {
             // Act
-            loadSuggestions('', ['Item1','Item2','Item3']);
+            loadSuggestions(['Item1','Item2','Item3']);
 
             // Assert
             expect(getSuggestions().length).toBe(3);
@@ -105,7 +105,7 @@ describe('auto-complete-directive', function() {
 
         it('shows the suggestions list when there are items to show', function() {
             // Act
-            loadSuggestions('', ['Item1']);
+            loadSuggestions(['Item1']);
 
             // Assert
             expect(getSuggestionsBox().css('display')).toBe('');
@@ -113,7 +113,7 @@ describe('auto-complete-directive', function() {
 
         it('hides the suggestions list when there is no items to show', function() {
             // Act
-            loadSuggestions('', []);
+            loadSuggestions([]);
 
             // Assert
             expect(getSuggestionsBox().css('display')).toBe('none');
@@ -157,7 +157,7 @@ describe('auto-complete-directive', function() {
 
         it('adds the selected suggestion to the input field when the enter key is pressed and the suggestions box is visible', function() {
             // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
+            loadSuggestions(['Item1', 'Item2']);
             element.scope().showSuggestions();
             element.scope().selectSuggestion(0);
 
@@ -170,7 +170,7 @@ describe('auto-complete-directive', function() {
 
         it('adds the selected suggestion to the input field when the tab key is pressed and there is a suggestion selected', function() {
             // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
+            loadSuggestions(['Item1', 'Item2']);
             element.scope().showSuggestions();
             element.scope().selectSuggestion(0);
 
@@ -183,7 +183,7 @@ describe('auto-complete-directive', function() {
 
         it('sets the selected suggestion to null after adding it to the input field', function () {
             // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
+            loadSuggestions(['Item1', 'Item2']);
             element.scope().selectSuggestion(0);
 
             // Act
@@ -195,7 +195,7 @@ describe('auto-complete-directive', function() {
 
         it('hides the suggestion box after adding the selected suggestion to the input field', function() {
             // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
+            loadSuggestions(['Item1', 'Item2']);
             element.scope().showSuggestions();
             element.scope().selectSuggestion(0);
 
@@ -221,7 +221,7 @@ describe('auto-complete-directive', function() {
 
         it('does not call the load function after adding the selected suggestion to the input field', function() {
             // Arrange
-            loadSuggestions('', ['Item1', 'Item2']);
+            loadSuggestions(['Item1', 'Item2']);
             element.scope().showSuggestions();
             element.scope().selectSuggestion(0);
 
@@ -242,7 +242,7 @@ describe('auto-complete-directive', function() {
 
         it('highlights the selected suggestion only', function() {
             // Arrange
-            loadSuggestions('', ['Item1', 'Item2', 'Item3']);
+            loadSuggestions(['Item1', 'Item2', 'Item3']);
 
             // Act
             element.scope().selectSuggestion(1);
@@ -254,6 +254,14 @@ describe('auto-complete-directive', function() {
             expect(getSuggestion(2).hasClass('selected')).toBe(false);
         });
 
+        it('selects the first item after the suggestion box is shown', function () {
+            // Arrange/Act
+            loadSuggestions(['Item1', 'Item2']);
+
+            // Assert
+            expect(element.scope().suggestions.selected).toBe('Item1');
+        });
+
         describe('suggestion box size and position', function() {
             beforeEach(function () {
                 var container = angular.element('<div style="text-align: center;"></div>');
@@ -263,9 +271,21 @@ describe('auto-complete-directive', function() {
                 compile(template);
             });
 
-            it('sets the suggestion box width as the input field width when the suggestions box is shown', function() {
+            it('sets the suggestion box size and position relative to the input field when the directive is rendered', function () {
                 // Arrange
                 // Done in beforeEach
+
+                // Act
+                $timeout.flush();
+
+                // Assert
+                expect(element.next().css('width')).toBe(element.outerWidth() + 'px');
+                expect(element.next().css('left')).toBe(Math.round(element.offset().left) + 'px');
+            });
+
+            it('resets the suggestion box size and position relative to the input field when the suggestions box is shown', function() {
+                // Arrange
+
 
                 // Act
                 element.scope().showSuggestions();
@@ -273,18 +293,6 @@ describe('auto-complete-directive', function() {
 
                 // Assert
                 expect(element.next().css('width')).toBe(element.outerWidth() + 'px');
-            });
-
-            it('sets the suggestion box left position relative to the input field\'s', function () {
-                // Arrange
-                // Done in beforeEach
-
-                // Act
-                element.scope().showSuggestions();
-                $scope.$digest();
-                $timeout.flush();
-
-                // Assert
                 expect(element.next().css('left')).toBe(Math.round(element.offset().left) + 'px');
             });
         });
@@ -300,20 +308,9 @@ describe('auto-complete-directive', function() {
                 element.scope().showSuggestions();
             });
 
-            it('selects the first suggestion when the down arrow key is pressed and there\'s nothing selected', function() {
-                // Arrange
-                loadSuggestions('', ['Item1', 'Item2']);
-
-                // Act
-                sendKeyDown(DOWN_ARROW);
-
-                // Assert
-                expect(element.scope().suggestions.selected).toBe('Item1');
-            });
-
             it('selects the next suggestion when the down arrow key is pressed and there\'s something selected', function() {
                 // Arrange
-                loadSuggestions('', ['Item1', 'Item2']);
+                loadSuggestions(['Item1', 'Item2']);
                 element.scope().selectSuggestion(0);
 
                 // Act
@@ -325,7 +322,7 @@ describe('auto-complete-directive', function() {
 
             it('selects the first suggestion when the down arrow key is pressed and the last item is selected', function() {
                 // Arrange
-                loadSuggestions('', ['Item1', 'Item2']);
+                loadSuggestions(['Item1', 'Item2']);
                 element.scope().selectSuggestion(1);
 
                 // Act
@@ -337,20 +334,9 @@ describe('auto-complete-directive', function() {
         });
 
         describe('upward', function() {
-            it('selects the last suggestion when the up arrow key is pressed and there\'s nothing selected', function() {
-                // Arrange
-                loadSuggestions('', ['Item1', 'Item2']);
-
-                // Act
-                sendKeyDown(UP_ARROW);
-
-                // Assert
-                expect(element.scope().suggestions.selected).toBe('Item2');
-            });
-
             it('selects the prior suggestion when the down up key is pressed and there\'s something selected', function() {
                 // Arrange
-                loadSuggestions('', ['Item1', 'Item2']);
+                loadSuggestions(['Item1', 'Item2']);
                 element.scope().selectSuggestion(1);
 
                 // Act
@@ -362,7 +348,7 @@ describe('auto-complete-directive', function() {
 
             it('selects the last suggestion when the up arrow key is pressed and the first item is selected', function() {
                 // Arrange
-                loadSuggestions('', ['Item1', 'Item2']);
+                loadSuggestions(['Item1', 'Item2']);
                 element.scope().selectSuggestion(0);
 
                 // Act
@@ -376,7 +362,7 @@ describe('auto-complete-directive', function() {
         describe('mouse', function() {
             it('selects the suggestion under the mouse pointer', function() {
                 // Arrange
-                loadSuggestions('', ['Item1', 'Item2', 'Item3']);
+                loadSuggestions(['Item1', 'Item2', 'Item3']);
 
                 // Act
                 getSuggestion(1).mouseenter();
@@ -387,7 +373,7 @@ describe('auto-complete-directive', function() {
 
             it('adds the selected suggestion to the input field when a mouse click is triggered', function() {
                 // Arrange
-                loadSuggestions('', ['Item1', 'Item2', 'Item3']);
+                loadSuggestions(['Item1', 'Item2', 'Item3']);
                 getSuggestion(1).mouseenter();
 
                 // Act
@@ -399,7 +385,7 @@ describe('auto-complete-directive', function() {
 
             it('focuses the input field when a suggestion is added via a mouse click', function() {
                 // Arrange
-                loadSuggestions('', ['Item1', 'Item2', 'Item3']);
+                loadSuggestions(['Item1', 'Item2', 'Item3']);
                 spyOn(element[0], 'focus');
 
                 // Act

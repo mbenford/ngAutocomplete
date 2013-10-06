@@ -12,7 +12,7 @@
         .controller('Ctrl', function($scope, $q) {
             $scope.loadItems = function(text) {
                 var deferred = $q.defer();
-                deferred.resolve(['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5']);
+                deferred.resolve(['Item 1', 'A very, very long item', 'Item 3', 'Item 4', 'Item 5']);
                 return deferred.promise;
             };
 

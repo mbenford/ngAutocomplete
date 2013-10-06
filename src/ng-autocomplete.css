@@ -12,7 +12,6 @@
 .ngAutocomplete ul.suggestions {
     margin: 0;
     padding: 0;
-    overflow: visible;
     list-style-type: none;
 }
 
@@ -20,9 +19,12 @@
     padding: 3px 20px;
     font-family: Arial, sans-serif;
     font-size: 18px;
-    line-height: 24px;
+    line-height: 22px;
     cursor: pointer;
     text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .ngAutocomplete li.selected {

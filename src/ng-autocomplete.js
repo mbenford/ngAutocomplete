@@ -37,6 +37,7 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
         };
         self.show = function() {
             updateStyle();
+            self.select(0);
             self.visible = true;
         };
         self.hide = function() {
@@ -67,6 +68,7 @@ angular.module('auto-complete', []).directive('autoComplete', function($parse, $
             self.selected = self.items[index];
         };
 
+        updateStyle();
         self.reset();
     }
 
